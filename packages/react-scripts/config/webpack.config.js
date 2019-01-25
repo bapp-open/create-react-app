@@ -8,6 +8,8 @@
 // @remove-on-eject-end
 'use strict';
 
+console.log("~~ bapp-open version ~~");
+
 const fs = require('fs');
 const path = require('path');
 const webpack = require('webpack');
@@ -319,6 +321,11 @@ module.exports = function(webpackEnv) {
                 ignore: false,
                 useEslintrc: false,
                 // @remove-on-eject-end
+                parserOptions: {
+                  ecmaFeatures: {
+                    legacyDecorators: true
+                  }
+                },
               },
               loader: require.resolve('eslint-loader'),
             },
@@ -383,6 +390,10 @@ module.exports = function(webpackEnv) {
                         },
                       },
                     },
+                  ],
+                  [
+                    require('@babel/plugin-proposal-decorators').default,
+                    { decoratorsBeforeExport: true },
                   ],
                 ],
                 // This is a feature of `babel-loader` for webpack (not Babel itself).
