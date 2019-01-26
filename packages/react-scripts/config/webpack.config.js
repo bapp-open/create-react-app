@@ -25,6 +25,7 @@ const safePostCssParser = require('postcss-safe-parser');
 const ManifestPlugin = require('webpack-manifest-plugin');
 const InterpolateHtmlPlugin = require('react-dev-utils/InterpolateHtmlPlugin');
 const WorkboxWebpackPlugin = require('workbox-webpack-plugin');
+const LodashModuleReplacementPlugin = require('lodash-webpack-plugin');
 const WatchMissingNodeModulesPlugin = require('react-dev-utils/WatchMissingNodeModulesPlugin');
 const ModuleScopePlugin = require('react-dev-utils/ModuleScopePlugin');
 const getCSSModuleLocalIdent = require('react-dev-utils/getCSSModuleLocalIdent');
@@ -391,14 +392,22 @@ module.exports = function(webpackEnv) {
                       },
                     },
                   ],
+                  ['lodash'],
                   [
                     require('@babel/plugin-proposal-decorators').default,
-                    { decoratorsBeforeExport: true },
+                    { legacy: true },
                   ],
                   [
                     require('@babel/plugin-proposal-class-properties').default,
                     { "loose": true },
                   ],
+                  [require.resolve('babel-plugin-transform-imports'), {
+                    "^src/components$": {
+                      "transform": path.resolve(paths.appPath, 'scripts/babel-components-transform.js'),
+                      "preventFullImport": true,
+                      "skipDefaultConversion": true
+                    }
+                  }],
                 ],
                 // This is a feature of `babel-loader` for webpack (not Babel itself).
                 // It enables caching results in ./node_modules/.cache/babel-loader/
@@ -512,14 +521,35 @@ module.exports = function(webpackEnv) {
             },
   
             {
-              test: /\.styl$/,
+              test: /\.less$/,
               use: getStyleLoaders(
                 {
                   importLoaders: 2,
                   sourceMap: isEnvProduction && shouldUseSourceMap,
                 },
-                'stylus-loader'
+                'less-loader'
               ),
+              // Don't consider CSS imports dead code even if the
+              // containing package claims to have no side effects.
+              // Remove this when webpack adds a warning or an error for this.
+              // See https://github.com/webpack/webpack/issues/6571
+              sideEffects: true,
+            },
+  
+            {
+              test: /\.styl$/,
+              use: [...getStyleLoaders(
+                {
+                  importLoaders: 2,
+                  sourceMap: isEnvProduction && shouldUseSourceMap,
+                }
+              ), {
+                loader: require.resolve('stylus-loader'),
+                options: {
+                  preferPathResolver: 'webpack',
+                  sourceMap: isEnvProduction && shouldUseSourceMap,
+                },
+              }],
               // Don't consider CSS imports dead code even if the
               // containing package claims to have no side effects.
               // Remove this when webpack adds a warning or an error for this.
@@ -550,6 +580,7 @@ module.exports = function(webpackEnv) {
       ],
     },
     plugins: [
+      new LodashModuleReplacementPlugin,
       // Generates an `index.html` file with the <script> injected.
       new HtmlWebpackPlugin(
         Object.assign(
