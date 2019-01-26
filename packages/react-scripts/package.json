@@ -1,6 +1,6 @@
 {
   "name": "@bapp-open/react-scripts",
-  "version": "21.1.3",
+  "version": "22.1.3",
   "description": "Configuration and scripts for Bapp Create React App.",
   "repository": "bapp-open/create-react-app",
   "license": "MIT",
